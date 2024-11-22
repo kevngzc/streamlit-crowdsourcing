@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "streamlit-crowdsourcing"
+version = "0.1.0"
+description = ""
+authors = ["KevinGzc <21306806+kevngzc@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.9.7 || >3.9.7,<4.0"
+streamlit = "^1.40.1"
+pandas = "^2.2.3"
+watchdog = "^6.0.0"
+polars = "^1.14.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+generate-tokens = "generate_tokens:main"
