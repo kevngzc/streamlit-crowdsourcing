@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "streamlit-crowdsourcing"
 version = "0.1.0"
-description = ""
+description = "A generic Streamlit-based platform for collaborative data crowdsourcing"
 authors = ["KevinGzc <21306806+kevngzc@users.noreply.github.com>"]
 readme = "README.md"
+packages = [{include = "crowdsourcing", from = "src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.9.7 || >3.9.7,<4.0"
@@ -13,9 +14,38 @@ watchdog = "^6.0.0"
 polars = "^1.14.0"
 xlsxwriter = "^3.2.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+pytest-cov = "^6.0.0"
+black = "^24.10.0"
+isort = "^5.13.2"
+flake8 = "^7.1.1"
+mypy = "^1.13.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-generate-tokens = "generate_tokens:main"
+generate-tokens = "scripts.generate_tokens:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = [".", "src"]
+addopts = "-ra -q -v --cov=crowdsourcing --cov-report=html"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
