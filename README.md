@@ -1,165 +1,193 @@
-# Museum Data Crowdsourcing with Streamlit
+# CSV Crowdsourcing Platform
 
-## Project Overview
+A Streamlit-based platform for collaborative data management with region-specific access control. Perfect for distributed data collection or validation across different regions, departments, or organizational units.
 
-This project is a Streamlit-based application designed to allow participants, each associated with a specific country, to view and modify data related to museums in their respective countries. Each participant has a unique token to access their country's data, while administrators can access all data. The data is stored in a CSV file and accessed through a user-friendly interface.
+## 🎯 Features
 
-## Table of Contents
+- **Region-Specific Access**: Users can only view and edit data for their assigned region
+- **Token-Based Authentication**: Secure access control using unique tokens
+- **Admin Dashboard**: Full data management and configuration capabilities
+- **Real-Time Editing**: Direct data modification with immediate updates
+- **Excel Export**: Download token data in Excel format
+- **Flexible Data Structure**: Works with any CSV format that includes a region column
 
-1. [Description](#description)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [Configuration](#configuration)
-5. [Token Management](#token-management)
-6. [Data Modification](#data-modification)
-7. [Contributing](#contributing)
-8. [License](#license)
-9. [Contact](#contact)
-
----
-
-## Description
-
-The app enables participants to:
-
-- View museum data specific to their assigned country.
-- Modify the data in an editable table.
-- Save changes in real-time to a shared dataset.
-
-Administrators can:
-
-- View and modify the entire dataset.
-- Distribute token-based URLs to participants.
-
----
-
-## Installation
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- [Poetry](https://python-poetry.org/) for dependency management.
+- Python 3.9+
+- Poetry for dependency management
 
-### Steps
+### Installation
 
 1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/csv-crowdsourcing.git
+cd csv-crowdsourcing
+```
 
-   ```bash
-   git clone https://github.com/yourusername/museum-data-crowdsourcing.git
-   cd museum-data-crowdsourcing
-   ```
+2. Install dependencies using Poetry:
+```bash
+poetry install
+```
 
-2. Install dependencies:
+3. Prepare your data structure:
+```bash
+data/
+├── your_data.csv    # Your CSV data with region column
+└── tokens.csv       # Generated access tokens
+```
 
-   ```bash
-   poetry install
-   ```
+4. Set up configuration in `config.json`:
+```json
+{
+    "DATA_PATH": "data/your_data.csv",
+    "TOKEN_FILE": "data/tokens.csv",
+    "FILTER_COLUMN": "your_region_column",
+    "APP_TITLE": "Data Update Portal",
+    "APP_ICON": "📊",
+    "HELP_TEXT": "### How to use the app:\n1. Enter your token on the home page.\n2. If valid, view the filtered data for your region.\n3. Edit values directly in the table.\n4. Save your changes when done!"
+}
+```
 
-3. Place your dataset in the `data` directory (see [Configuration](#configuration)).
+### Getting Started
 
-4. Generate tokens for participants and administrators (see [Token Management](#token-management)).
+1. Generate access tokens:
+```bash
+poetry run python generate_tokens.py
+```
 
----
+2. Launch the application:
+```bash
+poetry run streamlit run app.py
+```
 
-## Usage
+3. Access via your browser:
+- Local: `http://localhost:8501`
+- Token URL: `http://localhost:8501/?token=YOUR_TOKEN`
 
-1. Run the Streamlit app:
+## 📊 Data Structure
 
-   ```bash
-   poetry run streamlit run app.py
-   ```
+Your CSV data must include:
+1. A region/filtering column (specified in `FILTER_COLUMN`)
+2. Any additional data columns you need
+3. A unique identifier column
 
-2. Access the app at `http://localhost:8501/`.
+Example formats:
 
-3. Provide participants with token-based URLs:
+```csv
+# Example 1: Geographic Data
+region_name,location,data_point,timestamp,id
 
-   ```plaintext
-   http://localhost:8501/?token=your_token
-   ```
+# Example 2: Organizational Data
+department,employee_id,project,status,comments,record_id
+```
 
-   Replace `your_token` with the token generated in the `tokens.csv` file.
+## 💼 Admin Features
 
-4. Participants can log in using their token to access and modify their data.
+The admin interface provides:
+1. **Dataset Management**:
+   - Upload new CSV data
+   - Replace or append to existing data
+   - Preview data before importing
 
----
+2. **Token Management**:
+   - View all active tokens
+   - Download token list as Excel
+   - Monitor token assignments
 
-## Configuration
+3. **Configuration**:
+   - Update application settings
+   - Customize app title and icon
+   - Modify help text
+   - Change data paths
 
-- **Dataset Path**: Set the path to your CSV file in `config.py` under `DATA_PATH`.
-- **Token File**: Define the path to the `tokens.csv` file in `config.py` under `TOKEN_FILE`.
-- **Filter Column**: Specify the column used to filter data for participants (e.g., `country_name`) in `config.py` under `FILTER_COLUMN`.
-- **General Settings**:
-  - `APP_TITLE`: Title of the application.
-  - `APP_ICON`: Icon for the application.
-  - `HELP_TEXT`: Instructions displayed in the app sidebar.
+## 👥 User Features
 
----
+Users can:
+1. Access via token or URL
+2. View and edit their region's data
+3. Save changes in real-time
+4. Navigate easily with home button
+5. Log out securely
 
-## Token Management
+## 🔒 Security Features
 
-### Generating Tokens
+- Token-based authentication
+- Region-specific data access
+- Secure URL parameters
+- Admin-only configuration
+- Safe data handling
 
-Tokens are used to provide access to specific data for each participant. To generate tokens:
+## 📁 Project Structure
+```
+project/
+├── app.py                # Main application
+├── generate_tokens.py    # Token generation
+├── config.json          # Configuration
+├── data/               
+│   ├── your_data.csv    # Data file
+│   └── tokens.csv       # Access tokens
+├── style.css            # Custom styling
+└── README.md           
+```
 
-1. Run the token generation script:
+## ⚙️ Configuration Options
 
-   ```bash
-   poetry run python generate_tokens.py
-   ```
+| Setting | Description | Example |
+|---------|-------------|---------|
+| DATA_PATH | Path to data CSV | "data/your_data.csv" |
+| TOKEN_FILE | Path to tokens CSV | "data/tokens.csv" |
+| FILTER_COLUMN | Column for filtering | "region_name" |
+| APP_TITLE | Application title | "Data Portal" |
+| APP_ICON | Emoji icon | "📊" |
+| HELP_TEXT | Sidebar help text | "### How to use..." |
 
-2. The tokens will be saved in a `tokens.csv` file in the `data` directory.
+## 🔄 Best Practices
 
-3. Each token is mapped to a specific country or the `admin` role for full access.
+1. **Data Management**:
+   - Regular backups
+   - Validate CSV structure
+   - Use clear column names
+   - Include unique IDs
 
-### Sharing Tokens
+2. **Token Management**:
+   - Secure distribution
+   - Regular rotation
+   - Clear assignments
+   - Excel export for tracking
 
-- Share the token-based URL with participants:
+3. **User Access**:
+   - Share token URLs
+   - Monitor usage
+   - Review permissions
+   - Regular audits
 
-  ```plaintext
-  http://localhost:8501/?token=your_token
-  ```
+## 🛠️ Development
 
-- Replace `your_token` with the unique token from `tokens.csv`.
+### Adding Features
 
----
+1. Update `app.py` for new functionality
+2. Modify `style.css` for styling
+3. Update `config.json` for settings
 
-## Data Modification
+### Requirements
 
-Participants can:
+```toml
+[tool.poetry.dependencies]
+python = "^3.9"
+streamlit = "^1.29.0"
+pandas = "^2.1.0"
+xlsxwriter = "^3.1.9"
+```
 
-- View their filtered dataset based on the assigned token.
-- Modify the data directly in an editable table using Streamlit's `data_editor`.
-- Save changes, which update the shared dataset in real-time.
+## 🆘 Support
 
-Administrators can:
+1. Check Help text in sidebar
+2. Review configuration
+3. Contact administrator
+4. Create GitLab issue
 
-- View and modify the entire dataset using the `admin` token.
+## 📝 License
 
----
-
-## Contributing
-
-Contributions are welcome! Please open an issue or pull request if you have suggestions or find bugs.
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Contact
-
-For questions or inquiries, please contact [your_email@example.com](mailto:your_email@example.com).
-
----
-
-### Key Changes in This README:
-1. **Token Management Section**:
-   - Added instructions for generating and sharing tokens.
-2. **Usage Update**:
-   - Included steps for using token-based URLs.
-3. **Configuration Details**:
-   - Expanded to include token file and filter column settings.
-4. **Enhanced Description**:
-   - Clarified participant and administrator roles.
+MIT License - see [LICENSE](LICENSE)

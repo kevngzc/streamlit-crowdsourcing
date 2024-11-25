@@ -1,0 +1,8 @@
+{
+    "DATA_PATH": "data/museum_osm_raw_data.csv",
+    "TOKEN_FILE": "data/tokens.csv",
+    "FILTER_COLUMN": "country_name",
+    "APP_TITLE": "Data Update Portal",
+    "APP_ICON": "\ud83c\udfa8",
+    "HELP_TEXT": "### How to use the app:\n1. Enter your token on the home page.\n2. If valid, view the filtered data for your country.\n3. Edit values directly in the table.\n4. Save your changes when done!"
+}
