@@ -5,9 +5,9 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-from crowdsourcing.core.data_manager import DataManager
-from crowdsourcing.core.config import load_config, save_config
-from crowdsourcing.admin.dashboard import render_admin_page
+from data_manager import DataManager
+from config import load_config, save_config
+from dashboard import render_admin_page
 
 def render_home_page(config: Dict[str, Any]) -> Optional[str]:
     """Render the home page with token input."""
@@ -33,7 +33,6 @@ def render_navigation():
     with col3:
         if st.button("🏠 Home"):
             st.session_state.token = None
-            st.query_params.clear()
             st.rerun()
 
 def load_tokens(token_file: str) -> Dict[str, str]:
@@ -140,7 +139,7 @@ def main():
         
         # Initialize session state
         if "token" not in st.session_state:
-            st.session_state.token = st.query_params.get("token", None)
+            st.session_state.token = None
         
         # Render navigation
         render_navigation()
@@ -159,7 +158,6 @@ def main():
             if input_token:
                 if input_token in tokens:
                     st.session_state.token = input_token
-                    st.query_params["token"] = input_token
                     st.rerun()
                 else:
                     st.error("Invalid token. Please try again.")
@@ -175,7 +173,6 @@ def main():
             # Logout button
             if st.sidebar.button("Logout"):
                 st.session_state.token = None
-                st.query_params.clear()
                 st.rerun()
         
     except Exception as e:
