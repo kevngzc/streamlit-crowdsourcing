@@ -1,13 +1,29 @@
 """Main entry point for the crowdsourcing application."""
-import json
 import streamlit as st
-import pandas as pd
-from pathlib import Path
 from typing import Dict, Any, Optional
+from pathlib import Path
+import pandas as pd
 
-from data_manager import DataManager
+# Import local modules
 from config import load_config, save_config
+from data_manager import DataManager
 from dashboard import render_admin_page
+from data_source import DataSourceManager
+
+# Load configuration before any Streamlit commands
+config = load_config()
+
+# Set page config MUST be the first Streamlit command
+st.set_page_config(
+    page_title=config.get('APP_TITLE', 'Museum Data Crowdsourcing'),
+    page_icon=config.get('APP_ICON', '🏛️'),
+    layout="wide"
+)
+
+def initialize_app_data(config: Dict[str, Any]):
+    """Initialize application data and generate tokens."""
+    data_source = DataSourceManager(config)
+    data_source.generate_tokens()
 
 def render_home_page(config: Dict[str, Any]) -> Optional[str]:
     """Render the home page with token input."""
@@ -35,24 +51,27 @@ def render_navigation():
             st.session_state.token = None
             st.rerun()
 
-def load_tokens(token_file: str) -> Dict[str, str]:
-    """Load and validate tokens."""
+def load_tokens(config: Dict[str, Any]) -> Dict[str, str]:
+    """Load tokens from both config (admin) and file (country tokens)."""
+    tokens = {}
+    
+    # Add admin token from config
+    admin_token = config.get("ADMIN_TOKEN")
+    if admin_token:
+        tokens[admin_token] = "admin"
+    
+    # Load country tokens from file
     try:
+        token_file = config["TOKEN_FILE"]
         Path(token_file).parent.mkdir(parents=True, exist_ok=True)
-        if not Path(token_file).exists():
-            # Create default token file
-            tokens_df = pd.DataFrame({
-                'token': ['admin'],
-                'country': ['admin']
-            })
-            tokens_df.to_csv(token_file, index=False)
-            return dict(zip(tokens_df["token"], tokens_df["country"]))
-            
-        tokens_df = pd.read_csv(token_file)
-        return dict(zip(tokens_df["token"], tokens_df["country"]))
+        if Path(token_file).exists():
+            tokens_df = pd.read_csv(token_file)
+            country_tokens = dict(zip(tokens_df["token"], tokens_df["country"]))
+            tokens.update(country_tokens)
     except Exception as e:
-        st.error(f"Error loading tokens: {str(e)}")
-        return {'admin': 'admin'}  # Default admin token
+        st.error(f"Error loading country tokens: {str(e)}")
+    
+    return tokens
 
 def render_country_page(data_manager: DataManager, country: str, config: Dict[str, Any]):
     """Render the country-specific interface."""
@@ -89,9 +108,40 @@ def render_country_page(data_manager: DataManager, country: str, config: Dict[st
                     help="Description",
                     max_chars=500
                 ),
+                "operator": st.column_config.TextColumn(
+                    "Operator",
+                    help="Museum operator"
+                ),
+                "phone": st.column_config.TextColumn(
+                    "Phone",
+                    help="Contact phone number"
+                ),
+                "email": st.column_config.TextColumn(
+                    "Email",
+                    help="Contact email"
+                ),
+                "address": st.column_config.TextColumn(
+                    "Address",
+                    help="Physical address"
+                ),
                 "website": st.column_config.LinkColumn(
                     "Website",
                     help="Website URL"
+                ),
+                "wheelchair": st.column_config.CheckboxColumn(
+                    "Wheelchair Access",
+                    help="Wheelchair accessible"
+                ),
+                "fee": st.column_config.NumberColumn(
+                    "Entry Fee",
+                    help="Entry fee information",
+                    format="%.2f"
+                ),
+                "capacity": st.column_config.NumberColumn(
+                    "Capacity",
+                    help="Visitor capacity",
+                    min_value=0,
+                    format="%d"
                 ),
                 "id": st.column_config.NumberColumn(
                     "ID",
@@ -124,15 +174,8 @@ def load_css():
 def main():
     """Main application entry point."""
     try:
-        # Load configuration
-        config = load_config()
-        
-        # Configure Streamlit page
-        st.set_page_config(
-            page_title=config["APP_TITLE"],
-            page_icon=config["APP_ICON"],
-            layout="wide"
-        )
+        # Initialize application data
+        initialize_app_data(config)
         
         # Load custom CSS
         load_css()
@@ -145,7 +188,7 @@ def main():
         render_navigation()
         
         # Load tokens and initialize data manager
-        tokens = load_tokens(config["TOKEN_FILE"])
+        tokens = load_tokens(config)
         data_manager = DataManager(config)
         
         # Sidebar

@@ -1,118 +1,154 @@
-# CSV Crowdsourcing Platform
+# Museum Data Management System
 
-A Streamlit-based platform for collaborative data management with region-specific access control.
+A Streamlit-based application for managing museum data with token-based access control and support for both Dataiku DSS and CSV data sources.
 
 ## Features
 
-- Region-specific data access and editing
 - Token-based authentication
-- Admin dashboard with full management capabilities
-- Real-time data editing
-- Excel export for token management
-- Flexible CSV data structure
+- Country-specific data access and management
+- Admin dashboard with advanced features
+- Support for both Dataiku DSS and CSV data sources
+- Dynamic data editing capabilities
+- Token management system
 
 ## Installation
 
+1. Install the required dependencies:
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/csv-crowdsourcing.git
-cd csv-crowdsourcing
-
-# Install dependencies
-poetry install
-
-# Generate initial tokens
-poetry run generate-tokens
-
-# Start application
-poetry run start
+pip install -r requirements.txt
 ```
 
-## Project Structure
+Required packages:
+- streamlit==1.40.2
+- altair>=5.2.0
+- pandas>=2.0.0
+- openpyxl>=3.1.0
+- xlsxwriter>=3.1.0
 
-```
-csv-crowdsourcing/
-├── src/                      # Source code
-│   └── crowdsourcing/
-│       ├── admin/           # Admin dashboard
-│       ├── core/            # Core functionality
-│       ├── ui/              # UI components
-│       ├── main.py         # Main application
-│       └── cli.py          # CLI interface
-├── tests/                   # Unit tests
-├── scripts/                 # Utility scripts
-├── static/                  # Static assets
-│   ├── css/                # Styling
-│   └── templates/          # HTML templates
-└── data/                    # Data directory
-    └── examples/           # Example datasets
-```
-
-## Development
-
-```bash
-# Run tests
-poetry run pytest
-
-# Run tests with coverage
-poetry run pytest --cov
-
-# Format code
-poetry run black .
-poetry run isort .
-```
-
-## Data Structure
-
-Your CSV must include:
-1. Region column (configurable in settings)
-2. Unique identifier column
-3. Additional data columns as needed
-
-Example:
-```csv
-region,location,data_point,id
-Region1,Location1,Value1,1
-Region2,Location2,Value2,2
-```
+2. Configure your environment:
+   - Create a `data` directory for CSV files (if using CSV mode)
+   - Set up Dataiku DSS datasets (if using DSS mode)
 
 ## Configuration
 
-Edit `data/config.json`:
+The application uses `config.json` for configuration:
+
 ```json
 {
-    "DATA_PATH": "data/your_data.csv",
+    "APP_TITLE": "Museum Data Management",
+    "APP_ICON": "🏛️",
+    "HELP_TEXT": "Welcome to the Museum Data Management System",
+    "DATA_SOURCE": {
+        "type": "dss",  // or "csv"
+        "settings": {
+            "input_dataset": "MUSEUMS_INPUT",
+            "output_dataset": "MUSEUMS_OUTPUT",
+            "csv_path": "data/museums.csv"
+        }
+    },
     "TOKEN_FILE": "data/tokens.csv",
-    "FILTER_COLUMN": "region",
-    "APP_TITLE": "Data Portal",
-    "APP_ICON": "📊"
+    "ADMIN_TOKEN": {
+        "token": "admin",
+        "country": "admin"
+    }
 }
 ```
 
-## Security Features
+### Data Source Configuration
 
-- Token-based authentication
-- Region-specific data access
-- Secure URL parameters
-- Admin-only configuration
-- Data validation
+#### For Dataiku DSS:
+1. Set `type` to "dss"
+2. Configure input and output dataset names in settings
 
-## Testing Coverage
+#### For CSV:
+1. Set `type` to "csv"
+2. Ensure the csv_path points to your data file
 
-Run tests with coverage reporting:
+## Running the Application
+
+### Standard Mode:
 ```bash
-poetry run pytest --cov
+streamlit run app.py
 ```
 
-Coverage report available in `htmlcov/index.html`
+### In Dataiku Code Studio:
+1. Configure your DSS datasets
+2. Run the application using Dataiku's interface
 
-## Dependencies
+## User Roles
 
-- Python >=3.9
-- Streamlit ^1.40.1
-- Pandas ^2.2.3
-- Additional dependencies in pyproject.toml
+### Admin User
+- Access using the admin token from config.json
+- Full data management capabilities
+- Token management for countries
+- Configuration management
+- Dataset upload/management
+
+### Country Users
+- Access using country-specific tokens
+- View and edit only their country's data
+- Cannot access admin features
+- Tokens managed by admin
+
+## Directory Structure
+
+```
+streamlit-crowdsourcing/
+├── app.py              # Main application
+├── dashboard.py        # Admin dashboard
+├── data_manager.py     # Data management
+├── data_source.py      # Data source handler
+├── config.py          # Configuration utilities
+├── config.json        # Application configuration
+├── requirements.txt   # Dependencies
+├── data/              # Data directory (for CSV mode)
+│   ├── museums.csv
+│   └── tokens.csv
+└── static/            # Static assets
+    └── css/
+        └── style.css
+```
+
+## Security Notes
+
+- Keep your `config.json` secure as it contains the admin token
+- Regularly rotate country tokens
+- Back up your data regularly
+- Monitor access logs if available
+
+## Development
+
+To contribute to this project:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. Data source connection errors:
+   - Check DSS dataset names
+   - Verify CSV file paths
+   - Ensure proper permissions
+
+2. Token issues:
+   - Verify token file exists
+   - Check token file permissions
+   - Confirm token format
+
+3. Streamlit compatibility:
+   - Ensure correct Streamlit version (1.40.2)
+   - Check all dependencies are installed
+
+## Support
+
+For issues and questions:
+1. Check the troubleshooting section
+2. Submit an issue on GitHub
+3. Contact the development team
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+This project is licensed under MIT License - see the LICENSE file for details.
