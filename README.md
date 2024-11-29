@@ -1,154 +1,138 @@
-# Museum Data Management System
+# Museum Data Crowdsourcing Application
 
-A Streamlit-based application for managing museum data with token-based access control and support for both Dataiku DSS and CSV data sources.
+A Streamlit application for museum data management through country-specific token access. The application supports both Dataiku DSS and local environments.
+
+## Project Structure
+```
+streamlit-crowdsourcing/
+├── app.py                 # Main application
+├── config.py             # Configuration management
+├── dashboard.py          # Admin dashboard interface
+├── data_manager.py       # Data operations handler
+├── data_source.py        # Data source interface
+├── config.json           # Local configuration
+├── requirements.txt      # Project dependencies
+├── .streamlit/           # Streamlit configuration
+└── data/                 # Data directory
+    ├── museums.csv       # Museum database
+    └── tokens.csv        # Access tokens
+```
 
 ## Features
 
+### Data Management
+- Museum information tracking with fields:
+  - Core: name, country, heritage status, description
+  - Contact: operator, phone, email, address, website
+  - Facilities: wheelchair access, entry fee, capacity
+- Real-time data editing with validation
+- Country-specific data access
+
+### Security
 - Token-based authentication
-- Country-specific data access and management
-- Admin dashboard with advanced features
-- Support for both Dataiku DSS and CSV data sources
-- Dynamic data editing capabilities
-- Token management system
-
-## Installation
-
-1. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-Required packages:
-- streamlit==1.40.2
-- altair>=5.2.0
-- pandas>=2.0.0
-- openpyxl>=3.1.0
-- xlsxwriter>=3.1.0
-
-2. Configure your environment:
-   - Create a `data` directory for CSV files (if using CSV mode)
-   - Set up Dataiku DSS datasets (if using DSS mode)
+- SHA-256 based stable token generation
+- Country-specific access control
+- Admin dashboard for management
 
 ## Configuration
 
-The application uses `config.json` for configuration:
-
+### Dataiku DSS Variables
 ```json
 {
-    "APP_TITLE": "Museum Data Management",
-    "APP_ICON": "🏛️",
-    "HELP_TEXT": "Welcome to the Museum Data Management System",
-    "DATA_SOURCE": {
-        "type": "dss",  // or "csv"
-        "settings": {
-            "input_dataset": "MUSEUMS_INPUT",
-            "output_dataset": "MUSEUMS_OUTPUT",
-            "csv_path": "data/museums.csv"
-        }
-    },
-    "TOKEN_FILE": "data/tokens.csv",
-    "ADMIN_TOKEN": {
-        "token": "admin",
-        "country": "admin"
+    "STREAMLIT_CROWDSOURCING": {
+        "ADMIN_TOKEN": "your_secure_token",
+        "DATA_PATH": "data/museums.csv",
+        "TOKEN_FILE": "data/tokens.csv",
+        "APP_TITLE": "Museum Data Crowdsourcing",
+        "APP_ICON": "🏛️",
+        "HELP_TEXT": "Welcome message",
+        "FILTER_COLUMN": "country_name",
+        "STREAMLIT_INPUT": "input_dataset_name",
+        "STREAMLIT_OUTPUT": "output_dataset_name"
     }
 }
 ```
 
-### Data Source Configuration
+### Local Development
+Create config.json in project root:
+```json
+{
+    "DATA_PATH": "data/museums.csv",
+    "TOKEN_FILE": "data/tokens.csv",
+    "APP_TITLE": "Museum Data Crowdsourcing",
+    "APP_ICON": "🏛️",
+    "HELP_TEXT": "Welcome message",
+    "FILTER_COLUMN": "country_name",
+    "ADMIN_TOKEN": "your_admin_token"
+}
+```
 
-#### For Dataiku DSS:
-1. Set `type` to "dss"
-2. Configure input and output dataset names in settings
+## Installation
 
-#### For CSV:
-1. Set `type` to "csv"
-2. Ensure the csv_path points to your data file
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd streamlit-crowdsourcing
+```
 
-## Running the Application
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-### Standard Mode:
+3. Create data directory:
+```bash
+mkdir -p data
+```
+
+## Usage
+
+### For Administrators
+1. Access admin dashboard with admin token
+2. Generate country access tokens
+3. Download and distribute tokens
+4. Monitor data submissions
+
+### For Country Users
+1. Log in with provided token
+2. View/edit country museum data
+3. Save changes as needed
+4. Log out when finished
+
+## Deployment
+
+### In Dataiku DSS
+1. Configure project variables
+2. Set up webapp security:
+```
+PUBLIC_WEBAPPS_WHITELIST=your_webapp_id
+your_webapp_id={"allow_public_access": true, "require_auth": false}
+```
+
+### Local Development
 ```bash
 streamlit run app.py
 ```
 
-### In Dataiku Code Studio:
-1. Configure your DSS datasets
-2. Run the application using Dataiku's interface
+## Dependencies
+- Python 3.9+
+- Streamlit 1.31.0+
+- Pandas 2.0.0+
+- Numpy 1.24.0+
 
-## User Roles
+## Security Features
+- Stable token generation
+- Data validation
+- Type checking
+- Case-insensitive matching
+- Error handling
+- Protected admin functions
 
-### Admin User
-- Access using the admin token from config.json
-- Full data management capabilities
-- Token management for countries
-- Configuration management
-- Dataset upload/management
-
-### Country Users
-- Access using country-specific tokens
-- View and edit only their country's data
-- Cannot access admin features
-- Tokens managed by admin
-
-## Directory Structure
-
-```
-streamlit-crowdsourcing/
-├── app.py              # Main application
-├── dashboard.py        # Admin dashboard
-├── data_manager.py     # Data management
-├── data_source.py      # Data source handler
-├── config.py          # Configuration utilities
-├── config.json        # Application configuration
-├── requirements.txt   # Dependencies
-├── data/              # Data directory (for CSV mode)
-│   ├── museums.csv
-│   └── tokens.csv
-└── static/            # Static assets
-    └── css/
-        └── style.css
-```
-
-## Security Notes
-
-- Keep your `config.json` secure as it contains the admin token
-- Regularly rotate country tokens
-- Back up your data regularly
-- Monitor access logs if available
-
-## Development
-
-To contribute to this project:
-
+## Contributing
 1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
-
-## Troubleshooting
-
-Common issues and solutions:
-
-1. Data source connection errors:
-   - Check DSS dataset names
-   - Verify CSV file paths
-   - Ensure proper permissions
-
-2. Token issues:
-   - Verify token file exists
-   - Check token file permissions
-   - Confirm token format
-
-3. Streamlit compatibility:
-   - Ensure correct Streamlit version (1.40.2)
-   - Check all dependencies are installed
-
-## Support
-
-For issues and questions:
-1. Check the troubleshooting section
-2. Submit an issue on GitHub
-3. Contact the development team
+2. Create a new branch
+3. Make your changes
+4. Submit a pull request
 
 ## License
-
-This project is licensed under MIT License - see the LICENSE file for details.
+This project is licensed under the terms included in the LICENSE file.

@@ -1,8 +1,0 @@
-Add in admin a button to generate token then download or show them + check if it works
-Test url link 
-share it with Georges
-fix deployment on streamlit app
-add print with emoji in logs
-store markdown style in specific file
-Add lat lon check with map preview 
-clean museum list - Add config id column and hide it to user

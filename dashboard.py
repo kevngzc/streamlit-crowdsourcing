@@ -1,51 +1,113 @@
 """Admin dashboard functionality."""
 import streamlit as st
 import pandas as pd
-import uuid
+import hashlib
 from pathlib import Path
 from typing import Dict, Any
 
-def handle_dataset_upload(config: Dict[str, Any], current_df: pd.DataFrame) -> None:
-    """Handle dataset upload and management"""
-    st.markdown("### Dataset Management")
-    uploaded_file = st.file_uploader("Upload new dataset", type=["csv"])
+def generate_stable_token(country: str) -> str:
+    """Generate a stable 10-character token based on country name."""
+    # Ensure country is a string and not NaN or empty
+    if pd.isna(country) or not str(country).strip():
+        return ""
     
-    if uploaded_file:
-        try:
-            new_data = pd.read_csv(uploaded_file)
-            st.write("Preview of uploaded data:")
-            st.dataframe(new_data.head())
-            
-            action = st.radio(
-                "Choose action:",
-                ["Replace current dataset", "Append to current dataset"]
-            )
-            
-            if st.button("Apply Changes"):
-                try:
-                    if action == "Replace current dataset":
-                        new_data.to_csv(config["DATA_PATH"], index=False)
-                        st.success("Dataset replaced successfully!")
-                    else:
-                        updated_data = pd.concat([current_df, new_data], ignore_index=True)
-                        updated_data.to_csv(config["DATA_PATH"], index=False)
-                        st.success("Data appended successfully!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error saving data: {str(e)}")
-                    
-        except Exception as e:
-            st.error(f"Error processing uploaded file: {str(e)}")
+    country_str = str(country).strip().upper()
+    # Create a hash of the country name
+    hash_object = hashlib.sha256(country_str.encode())
+    hash_hex = hash_object.hexdigest()
+    # Take first 10 characters and convert to uppercase
+    return hash_hex[:10].upper()
 
-def handle_token_management(config: Dict[str, Any]) -> None:
+def handle_dataset_management(config: Dict[str, Any], current_df: pd.DataFrame) -> None:
+    """Handle dataset viewing and management"""
+    st.markdown("### Dataset Management")
+    
+    # Display current dataset
+    if not current_df.empty:
+        st.dataframe(
+            current_df,
+            hide_index=True,
+            use_container_width=True
+        )
+    else:
+        st.warning("No data available in the dataset")
+
+def handle_token_management(config: Dict[str, Any], df: pd.DataFrame) -> None:
     """Handle token viewing and management"""
     st.markdown("### Token Management")
+
+    if st.button("Generate Tokens for All Countries"):
+        try:
+            if df.empty or 'country_name' not in df.columns:
+                st.error("No valid data available to generate tokens")
+                return
+            
+            # Convert country_name to string and clean data
+            cleaned_countries = df['country_name'].apply(lambda x: str(x).strip() if not pd.isna(x) else "")
+            unique_countries = sorted([c for c in cleaned_countries.unique() if c])  # Filter out empty strings
+            
+            tokens = []
+            for country in unique_countries:
+                token = generate_stable_token(country)
+                if token:  # Only add if we got a valid token
+                    tokens.append({
+                        'country': country,
+                        'token': token
+                    })
+            
+            # Create tokens DataFrame
+            if tokens:  # Only proceed if we have valid tokens
+                tokens_df = pd.DataFrame(tokens)
+                tokens_df = tokens_df.sort_values('country').reset_index(drop=True)
+                
+                # Add admin token if configured
+                admin_token = config.get('ADMIN_TOKEN')
+                if admin_token:
+                    admin_row = pd.DataFrame([{
+                        'country': 'admin',
+                        'token': admin_token
+                    }])
+                    tokens_df = pd.concat([admin_row, tokens_df], ignore_index=True)
+                
+                # Save tokens
+                token_file = config["TOKEN_FILE"]
+                Path(token_file).parent.mkdir(parents=True, exist_ok=True)
+                tokens_df.to_csv(token_file, index=False)
+                
+                st.success(f"Generated tokens for {len(tokens)} countries")
+                
+                # Display the tokens
+                st.dataframe(
+                    tokens_df,
+                    column_config={
+                        "country": st.column_config.TextColumn("Country"),
+                        "token": st.column_config.TextColumn("Token")
+                    },
+                    hide_index=True
+                )
+                
+                # Add download button
+                st.download_button(
+                    "Download Tokens CSV",
+                    tokens_df.to_csv(index=False).encode('utf-8'),
+                    "tokens.csv",
+                    "text/csv"
+                )
+            else:
+                st.warning("No valid countries found to generate tokens")
+                
+        except Exception as e:
+            st.error(f"Error generating tokens: {str(e)}")
+            st.error("Debug info:")
+            st.write("DataFrame info:", df.info())
+            st.write("Country name types:", df['country_name'].apply(type).unique())
+    
+    # Display current tokens if they exist
     try:
         token_file = config["TOKEN_FILE"]
-        Path(token_file).parent.mkdir(parents=True, exist_ok=True)
-        
         if Path(token_file).exists():
             tokens_df = pd.read_csv(token_file)
+            st.markdown("### Current Tokens")
             st.dataframe(
                 tokens_df,
                 column_config={
@@ -55,43 +117,15 @@ def handle_token_management(config: Dict[str, Any]) -> None:
                 hide_index=True
             )
             
-            if st.button("Download Tokens CSV"):
-                st.download_button(
-                    "Download Tokens",
-                    tokens_df.to_csv(index=False).encode('utf-8'),
-                    "tokens.csv",
-                    "text/csv"
-                )
-        else:
-            st.warning("No tokens file found.")
-            
-        # Add new token
-        st.markdown("### Add New Token")
-        with st.form("new_token"):
-            new_country = st.text_input("Country/Region:")
-            if st.form_submit_button("Generate Token"):
-                new_token = str(uuid.uuid4())[:8].upper()
-                new_row = pd.DataFrame({
-                    'country': [new_country],
-                    'token': [new_token]
-                })
-                
-                if Path(token_file).exists():
-                    tokens_df = pd.read_csv(token_file)
-                    # Check if country already exists
-                    if new_country.upper() in tokens_df['country'].str.upper().values:
-                        st.error(f"Token already exists for {new_country}")
-                        return
-                    updated_tokens = pd.concat([tokens_df, new_row], ignore_index=True)
-                else:
-                    updated_tokens = new_row
-                    
-                updated_tokens.to_csv(token_file, index=False)
-                st.success(f"New token generated for {new_country}: {new_token}")
-                st.rerun()
-                
+            # Add download button for current tokens
+            st.download_button(
+                "Download Current Tokens",
+                tokens_df.to_csv(index=False).encode('utf-8'),
+                "current_tokens.csv",
+                "text/csv"
+            )
     except Exception as e:
-        st.error(f"Error managing tokens: {str(e)}")
+        st.error(f"Error loading current tokens: {str(e)}")
 
 def handle_configuration(config: Dict[str, Any]) -> None:
     """Handle configuration management"""
@@ -133,10 +167,10 @@ def render_admin_page(config: Dict[str, Any], df: pd.DataFrame) -> None:
     ])
     
     with dataset_tab:
-        handle_dataset_upload(config, df)
+        handle_dataset_management(config, df)
         
     with tokens_tab:
-        handle_token_management(config)
+        handle_token_management(config, df)
         
     with config_tab:
         handle_configuration(config)

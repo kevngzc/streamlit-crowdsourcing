@@ -1,8 +1,25 @@
 """Main entry point for the crowdsourcing application."""
+import os
+import ssl
+
+# Disable SSL verification for Dataiku environment
+os.environ['REQUESTS_CA_BUNDLE'] = ''
+os.environ['SSL_CERT_FILE'] = ''
+if hasattr(ssl, '_create_unverified_context'):
+    ssl._create_default_https_context = ssl._create_unverified_context
+
+# Now import Streamlit and other libraries
 import streamlit as st
 from typing import Dict, Any, Optional
-from pathlib import Path
 import pandas as pd
+from pathlib import Path
+
+# Set page config as first Streamlit command
+st.set_page_config(
+    page_title="Museum Data Crowdsourcing",
+    page_icon="🏛️",
+    layout="wide"
+)
 
 # Import local modules
 from config import load_config, save_config
@@ -10,20 +27,17 @@ from data_manager import DataManager
 from dashboard import render_admin_page
 from data_source import DataSourceManager
 
-# Load configuration before any Streamlit commands
+# Load configuration after set_page_config
 config = load_config()
 
-# Set page config MUST be the first Streamlit command
-st.set_page_config(
-    page_title=config.get('APP_TITLE', 'Museum Data Crowdsourcing'),
-    page_icon=config.get('APP_ICON', '🏛️'),
-    layout="wide"
-)
-
 def initialize_app_data(config: Dict[str, Any]):
-    """Initialize application data and generate tokens."""
-    data_source = DataSourceManager(config)
-    data_source.generate_tokens()
+    """Initialize application data and directories."""
+    # Create necessary directories
+    data_dir = Path("data")
+    data_dir.mkdir(exist_ok=True)
+    
+    # Initialize data source
+    data_source = DataSourceManager.create(config)
 
 def render_home_page(config: Dict[str, Any]) -> Optional[str]:
     """Render the home page with token input."""
@@ -169,7 +183,7 @@ def load_css():
             with open(css_path, "r") as f:
                 st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     except Exception as e:
-        st.warning("Custom styling could not be loaded.")
+        pass  # Silently ignore missing CSS
 
 def main():
     """Main application entry point."""
